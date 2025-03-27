@@ -17,21 +17,22 @@ func main() {
 		Main().Render(r.Context(), w)
 	})
 
-	r.Get("/progress", func(w http.ResponseWriter, r *http.Request) {
+	r.Post("/progress", func(w http.ResponseWriter, r *http.Request) {
 		sse := datastar.NewSSE(w, r)
 		progress := 0
+		total := 10124
+		processed := 0
 		for {
 			select {
 			case <-r.Context().Done():
 				return
 			default:
-				progress++
-
-				// heavy work simulation (100ms)
-				time.Sleep(100 * time.Millisecond)
-
-				sse.MergeFragmentTempl(Progress(fmt.Sprintf("%d", progress)))
+				processed++
+				progress = (processed * 100 / total)
+				time.Sleep(1 * time.Millisecond)
+				sse.MergeFragmentTempl(Progress(fmt.Sprintf("%d", processed), fmt.Sprintf("%d", total), fmt.Sprintf("%d", progress)))
 				if progress == 100 {
+					sse.MergeFragmentTempl(Done())
 					return
 				}
 			}
